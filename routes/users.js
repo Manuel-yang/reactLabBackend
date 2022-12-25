@@ -9,10 +9,7 @@ router.get('/', async function(req, res, next) {
 });
 
 router.post('/', async function(req, res, next) {
-  const result = await userMethod.register(req, res)
-  if (result) {
-    res.send(result)
-  }
+  return await userMethod.register(req, res)
 });
 
 router.post('/:id', function(req, res, next) {

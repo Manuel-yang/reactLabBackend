@@ -1,5 +1,6 @@
 const User = require("./userModel")
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken')
 
 // Get all users
 exports.findUser = async () => {
@@ -32,7 +33,7 @@ exports.register = async (req, res) => {
         });
     });
       
-      return true
+      return res.status(201).json({code: 201, msg: 'Successful created new user.'});
     }
     else {
       return res.status(401).json({code: 401,msg: 'Password are at least 5 characters long and contain at least one number and one letter'});
