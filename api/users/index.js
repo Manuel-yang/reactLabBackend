@@ -17,8 +17,11 @@ exports.register = async (req, res) => {
   }
   if (req.query.action === 'register') {
     const reg = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{5,}$/
+    const regMail = /^[A-Za-z0-9]+([_\.][A-Za-z0-9]+)*@([A-Za-z0-9\-]+\.)+[A-Za-z]{2,6}$/;
+    if(!regMail.test(req.body.email)) {
+      return  res.status(401).json({code: 401,msg: 'Please input valid email address'});
+    }
     if(reg.test(req.body.password)) {
-      console.log(req.body)
       bcrypt.genSalt(10, (err, salt)=> {
         if (err) {
             return err;
