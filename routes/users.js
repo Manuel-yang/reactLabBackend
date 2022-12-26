@@ -4,8 +4,10 @@ const userMethod = require("../api/users/index")
 
 /* GET home page. */
 router.get('/', async function(req, res, next) {
-  const result = await userMethod.findUser()
+  const result = await userMethod.findUserById(req.query.id)
   res.send(result)
+  // const result = await userMethod.findUser()
+  // res.send(result)
 });
 
 router.post('/', async function(req, res, next) {
@@ -14,6 +16,11 @@ router.post('/', async function(req, res, next) {
 
 router.post('/:id', function(req, res, next) {
   return userMethod.updateUserInfo(req, res)
+});
+
+router.get('/:id', function(req, res, next) {
+  console.log(req.params)
+  return userMethod.findUserById(req, res)
 });
 
 
