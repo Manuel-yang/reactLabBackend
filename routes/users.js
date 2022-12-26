@@ -3,8 +3,8 @@ var router = express.Router();
 const userMethod = require("../api/users/index")
 
 /* GET home page. */
-router.get('/', async function(req, res, next) {
-  const result = await userMethod.findUserById(req.query.id)
+router.post('/userInfo', async function(req, res, next) {
+  const result = await userMethod.findUserById(req.body.id, req.body.token)
   res.send(result)
   // const result = await userMethod.findUser()
   // res.send(result)
@@ -19,7 +19,6 @@ router.post('/:id', function(req, res, next) {
 });
 
 router.get('/:id', function(req, res, next) {
-  console.log(req.params)
   return userMethod.findUserById(req, res)
 });
 

@@ -1,6 +1,7 @@
 const User = require("./userModel")
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken')
+const auth = require("../auth/index")
 
 // Get all users
 exports.findUser = async () => {
@@ -8,9 +9,13 @@ exports.findUser = async () => {
   return users
 }
 
-exports.findUserById = async (id) => {
+exports.findUserById = async (id, token) => {
   const user = await User.findByUserId(id);
-  return user
+  if (auth.jwtVerify(token) == user.username) {
+    
+    return user
+  }
+  return null
 }
 
 // register
@@ -55,7 +60,7 @@ exports.register = async (req, res) => {
           // if user is found and password matches, create a token
           const token = jwt.sign(user.username, process.env.SECRET);
           // return the information including token as JSON
-          return res.status(200).json({success: true, userId: user.id, token: 'BEARER ' + token});
+          return res.status(200).json({success: true, userId: user.id, token: token});
         } else {
           return res.status(401).json({code: 401,msg: 'Authentication failed. Wrong password.'});
         }
