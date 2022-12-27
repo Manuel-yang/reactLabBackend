@@ -129,17 +129,26 @@ exports.updateUserInfo = async (req, res) => {
     }
   }
   return res.status(403).json({code: 403, msg: "Invalid token"});
-  // if (req.body._id) delete req.body.id;
-  // const result = await User.updateOne({
-  //   _id: req.params.id,
-  // }, req.body);
-  // if (result.matchedCount) {
-  //   return res.status(200).json({ code:200, msg: 'User Updated Sucessfully' });
-  // } else {
-  //   return res.status(404).json({ code: 404, msg: 'Unable to Update User' });
-  // }
 }
 
-
+exports.updateGenres = async (req, res) => {
+  const user = await User.findByUserId(req.body.id);
+  if(auth.jwtVerify(req.body.token) == user.username) {
+    let newFavGenres = req.body.newFavGenres;
+    if(newFavGenres) {
+      await User.updateOne({
+        _id: req.body.id,
+      }, {
+        $set: {
+          favGenres: newFavGenres
+        }
+      });
+      return res.status(200).json({code: 200, msg: 'Update successfully'});
+    }
+  }
+  else {
+    return res.status(403).json({code: 403, msg: "Invalid token"});
+  }
+}
 
 

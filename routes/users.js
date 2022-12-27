@@ -15,9 +15,21 @@ router.post('/userInfo', async function(req, res, next) {
   // res.send(result)
 });
 
-router.post("updateInfo", async function(req, res) {
+router.post("/updateInfo", async function(req, res) {
   if(req.body.id && req.body.token) {
     return await userMethod.updateUserInfo(req, res)
+  }
+  else {
+    res.status(401).json({ code: 401, msg: 'Authentication failed. Invalid token' });
+  }
+})
+
+router.post("/updateGenres", async function(req, res) {
+  if(req.body.id && req.body.token) {
+    return await userMethod.updateGenres(req, res)
+  }
+  else {
+    res.status(401).json({ code: 401, msg: 'Authentication failed. Invalid token' });
   }
 })
 
