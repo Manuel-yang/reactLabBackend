@@ -76,6 +76,12 @@ exports.updateUserInfo = async (req, res) => {
     const username = req.body.username
     const email = req.body.email
     const password = req.body.password
+    if (!regMail.test(email)) {
+      return res.status(403).json({code: 403, msg: "Invalid email address"});
+    }
+    if (!reg.test(password)) {
+      return res.status(403).json({code: 403, msg: 'Password are at least 5 characters long and contain at least one number and one letter'});
+    }
     try {
       if(username) {
         await User.updateOne({
@@ -88,9 +94,6 @@ exports.updateUserInfo = async (req, res) => {
       }
   
       if(email) {
-        if (!regMail.test(email)) {
-          return res.status(403).json({code: 403, msg: "Invalid email address"});
-        }
         await User.updateOne({
           _id: req.body.id,
         }, {
@@ -101,9 +104,6 @@ exports.updateUserInfo = async (req, res) => {
       }
   
       if(password) {
-        if (!reg.test(password)) {
-          return res.status(403).json({code: 403, msg: 'Password are at least 5 characters long and contain at least one number and one letter'});
-        }
         bcrypt.genSalt(10, (err, salt)=> {
           if (err) {
               return err;
@@ -128,6 +128,7 @@ exports.updateUserInfo = async (req, res) => {
       return res.status(403).json({code: 403, msg: `Error: ${error}`});
     }
   }
+  return res.status(403).json({code: 403, msg: "Invalid token"});
   // if (req.body._id) delete req.body.id;
   // const result = await User.updateOne({
   //   _id: req.params.id,

@@ -17,8 +17,7 @@ router.post('/userInfo', async function(req, res, next) {
 
 router.post("updateInfo", async function(req, res) {
   if(req.body.id && req.body.token) {
-    const result = await userMethod.updateUserInfo(req, res)
-    res.send(result)
+    return await userMethod.updateUserInfo(req, res)
   }
 })
 
