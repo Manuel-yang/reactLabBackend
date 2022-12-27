@@ -15,6 +15,13 @@ router.post('/userInfo', async function(req, res, next) {
   // res.send(result)
 });
 
+router.post("updateInfo", async function(req, res) {
+  if(req.body.id && req.body.token) {
+    const result = await userMethod.updateUserInfo(req, res)
+    res.send(result)
+  }
+})
+
 router.post('/', async function(req, res, next) {
   return await userMethod.register(req, res)
 });

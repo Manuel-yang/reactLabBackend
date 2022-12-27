@@ -3,6 +3,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken')
 const auth = require("../auth/index")
 
+const reg = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{5,}$/
+const regMail = /^[A-Za-z0-9]+([_\.][A-Za-z0-9]+)*@([A-Za-z0-9\-]+\.)+[A-Za-z]{2,6}$/;
+
 // Get all users
 exports.findUser = async () => {
   const users = await User.find();
@@ -26,8 +29,6 @@ exports.register = async (req, res) => {
     return next();
   }
   if (req.query.action === 'register') {
-    const reg = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{5,}$/
-    const regMail = /^[A-Za-z0-9]+([_\.][A-Za-z0-9]+)*@([A-Za-z0-9\-]+\.)+[A-Za-z]{2,6}$/;
     if(!regMail.test(req.body.email)) {
       return  res.status(401).json({code: 401,msg: 'Please input valid email address'});
     }
@@ -70,15 +71,72 @@ exports.register = async (req, res) => {
 
 // Update a user
 exports.updateUserInfo = async (req, res) => {
-  if (req.body._id) delete req.body.id;
-  const result = await User.updateOne({
-    _id: req.params.id,
-  }, req.body);
-  if (result.matchedCount) {
-    return res.status(200).json({ code:200, msg: 'User Updated Sucessfully' });
-  } else {
-    return res.status(404).json({ code: 404, msg: 'Unable to Update User' });
+  const user = await User.findByUserId(req.body.id);
+  if(auth.jwtVerify(req.body.token) == user.username) {
+    const username = req.body.username
+    const email = req.body.email
+    const password = req.body.password
+    try {
+      if(username) {
+        await User.updateOne({
+          _id: req.body.id,
+        }, {
+          $set: {
+            username: username
+          }
+        });
+      }
+  
+      if(email) {
+        if (!regMail.test(email)) {
+          return res.status(403).json({code: 403, msg: "Invalid email address"});
+        }
+        await User.updateOne({
+          _id: req.body.id,
+        }, {
+          $set: {
+            email: email
+          }
+        });
+      }
+  
+      if(password) {
+        if (!reg.test(password)) {
+          return res.status(403).json({code: 403, msg: 'Password are at least 5 characters long and contain at least one number and one letter'});
+        }
+        bcrypt.genSalt(10, (err, salt)=> {
+          if (err) {
+              return err;
+          }
+          bcrypt.hash(req.body.password, salt, async (err, hash)=> {
+              if (err) {
+                  return err;
+              }
+              await User.updateOne({
+                _id: req.body.id,
+              }, {
+                $set: {
+                  password: hash
+                }
+              });
+          });
+      });
+      }
+
+      return res.status(200).json({code: 200, msg: 'Update successfully'});
+    } catch (error) {
+      return res.status(403).json({code: 403, msg: `Error: ${error}`});
+    }
   }
+  // if (req.body._id) delete req.body.id;
+  // const result = await User.updateOne({
+  //   _id: req.params.id,
+  // }, req.body);
+  // if (result.matchedCount) {
+  //   return res.status(200).json({ code:200, msg: 'User Updated Sucessfully' });
+  // } else {
+  //   return res.status(404).json({ code: 404, msg: 'Unable to Update User' });
+  // }
 }
 
 
