@@ -151,4 +151,23 @@ exports.updateGenres = async (req, res) => {
   }
 }
 
+exports.updateAvatar = async (req, res) => {
+  const user = await User.findByUserId(req.body.id);
+  if(auth.jwtVerify(req.body.token) == user.username) {
+    let newAvatar = req.body.avatarUrl;
+    if(newAvatar) {
+      await User.updateOne({
+        _id: req.body.id,
+      }, {
+        $set: {
+          avatar: newAvatar
+        }
+      });
+      return res.status(200).json({code: 200, msg: 'Update successfully'});
+    }
+  }
+  else {
+    return res.status(403).json({code: 403, msg: "Invalid token"});
+  }
+}
 

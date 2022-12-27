@@ -33,6 +33,15 @@ router.post("/updateGenres", async function(req, res) {
   }
 })
 
+router.post("/updateAvatar", async function(req, res) {
+  if(req.body.id && req.body.token) {
+    return await userMethod.updateAvatar(req, res)
+  }
+  else {
+    res.status(401).json({ code: 401, msg: 'Authentication failed. Invalid token' });
+  }
+}) 
+
 router.post('/', async function(req, res, next) {
   return await userMethod.register(req, res)
 });
