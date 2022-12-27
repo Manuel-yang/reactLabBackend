@@ -4,8 +4,13 @@ const userMethod = require("../api/users/index")
 
 /* GET home page. */
 router.post('/userInfo', async function(req, res, next) {
-  const result = await userMethod.findUserById(req.body.id, req.body.token)
-  res.send(result)
+  if(req.body.id && req.body.token) {
+    const result = await userMethod.findUserById(req.body.id, req.body.token)
+    res.send(result)
+  }
+    else {
+      res.status(401).json({ code: 401, msg: 'Authentication failed. Invalid token' });
+    }
   // const result = await userMethod.findUser()
   // res.send(result)
 });
