@@ -171,3 +171,24 @@ exports.updateAvatar = async (req, res) => {
   }
 }
 
+exports.updateFavMovies = async (req, res) => {
+  const user = await User.findByUserId(req.body.id);
+  if(auth.jwtVerify(req.body.token) == user.username) {
+    let newFavMovieId = req.body.movieId
+    let favouritesList = user.favourites
+    const set = new Set(newFavMovieId.concat(favouritesList))
+    const reuslt = Array.from(set)
+    await User.updateOne({
+      _id: req.body.id,
+    }, {
+      $set: {
+        favourites: reuslt
+      }
+    });
+    return res.status(200).json({code: 200, msg: 'Update successfully'});
+  }
+  else {
+    return res.status(403).json({code: 403, msg: "Invalid token"});
+  }
+}
+

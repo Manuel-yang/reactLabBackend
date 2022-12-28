@@ -9,7 +9,7 @@ const UserSchema = new Schema({
   username: { type: String, required: true},
   email: { type: String, require: true},
   password: {type: String, required: true },
-  favourites: [{type: mongoose.Schema.Types.ObjectId, ref: 'Movies'}],
+  favourites: [{type: Number, ref: 'Movies'}],
   favGenres: [{id: Number, name: String}],
   avatar: {type: String, default: "https://i.328888.xyz/2022/12/27/UVdOp.jpeg"}
 });
