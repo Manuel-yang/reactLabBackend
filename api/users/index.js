@@ -7,23 +7,23 @@ const reg = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{5,}$/
 const regMail = /^[A-Za-z0-9]+([_\.][A-Za-z0-9]+)*@([A-Za-z0-9\-]+\.)+[A-Za-z]{2,6}$/;
 
 // Get all users
-exports.findUser = async () => {
+exports.findUser = async (req, res) => {
   const users = await User.find();
-  return users
+  res.status(200).json(users)
 }
 
-exports.findUserById = async (id, token) => {
+exports.findUserById = async (req, res) => {
+  const id = req.body.id
+  const token = req.body.token
   const user = await User.findByUserId(id);
   if (auth.jwtVerify(token) == user.username) {
-    
-    return user
+    return res.status(200).json({code: 200, user: user});
   }
-  return null
+  return res.status(401).json({code: 401,msg: 'Invalid token or user id'});
 }
 
 // register
 exports.register = async (req, res) => {
-  console.log(req.query.action)
   if (!req.body.username || !req.body.password) {
     res.status(401).json({success: false, msg: 'Please pass username and password.'});
     return next();
@@ -43,7 +43,6 @@ exports.register = async (req, res) => {
             }
             req.body.password = hash;
             await User.create(req.body);
-            console.log(req.body)
         });
     });
       
@@ -76,10 +75,10 @@ exports.updateUserInfo = async (req, res) => {
     const username = req.body.username
     const email = req.body.email
     const password = req.body.password
-    if (!regMail.test(email)) {
+    if ( email &&!regMail.test(email)) {
       return res.status(403).json({code: 403, msg: "Invalid email address"});
     }
-    if (!reg.test(password)) {
+    if (password && !reg.test(password)) {
       return res.status(403).json({code: 403, msg: 'Password are at least 5 characters long and contain at least one number and one letter'});
     }
     try {
@@ -183,6 +182,24 @@ exports.updateFavMovies = async (req, res) => {
     }, {
       $set: {
         favourites: reuslt
+      }
+    });
+    return res.status(200).json({code: 200, msg: 'Update successfully'});
+  }
+  else {
+    return res.status(403).json({code: 403, msg: "Invalid token"});
+  }
+}
+
+
+exports.resetFavGenres = async (req, res) => {
+  const user = await User.findByUserId(req.body.id);
+  if(auth.jwtVerify(req.body.token) == user.username) {
+    await User.updateOne({
+      _id: req.body.id,
+    }, {
+      $set: {
+        favGenres: []
       }
     });
     return res.status(200).json({code: 200, msg: 'Update successfully'});
