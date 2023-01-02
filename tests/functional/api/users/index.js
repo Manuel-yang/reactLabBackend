@@ -82,5 +82,41 @@ describe("Users endpoint", () => {
           done();
         });
     });
+
+    it("should return error when the id miss",  (done) => {
+      request(api)
+        .post("/users/userInfo")
+        .send({token: token})
+        .expect("Content-Type", /json/)
+        .expect(200)
+        .end((err, res) => {
+          expect({ code: 401, msg: 'Authentication failed. Invalid token' })
+          done()
+        });
+    });
+
+    it("should return error when the token miss",  (done) => {
+      request(api)
+        .post("/users/userInfo")
+        .send({id: id})
+        .expect("Content-Type", /json/)
+        .expect(200)
+        .end((err, res) => {
+          expect({ code: 401, msg: 'Authentication failed. Invalid token' })
+          done()
+        });
+    });
+
+    it("should return error when the id and token is not combine",  (done) => {
+      request(api)
+        .post("/users/userInfo")
+        .send({id: "63b1ee9e9bf6aef1789f7328", token: token})
+        .expect("Content-Type", /json/)
+        .expect(200)
+        .end((err, res) => {
+          expect({code: 401,msg: 'Invalid token or user id'})
+          done()
+        });
+    });
   });
 })
