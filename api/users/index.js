@@ -34,9 +34,6 @@ exports.register = async (req, res) => {
     }
     if(reg.test(req.body.password)) {
       bcrypt.genSalt(10, (err, salt)=> {
-        if (err) {
-            return err;
-        }
         bcrypt.hash(req.body.password, salt, async (err, hash)=> {
             if (err) {
                 return err;
@@ -81,51 +78,47 @@ exports.updateUserInfo = async (req, res) => {
     if (password && !reg.test(password)) {
       return res.status(403).json({code: 403, msg: 'Password are at least 5 characters long and contain at least one number and one letter'});
     }
-    try {
-      if(username) {
-        await User.updateOne({
-          _id: req.body.id,
-        }, {
-          $set: {
-            username: username
-          }
-        });
-      }
-  
-      if(email) {
-        await User.updateOne({
-          _id: req.body.id,
-        }, {
-          $set: {
-            email: email
-          }
-        });
-      }
-  
-      if(password) {
-        bcrypt.genSalt(10, (err, salt)=> {
-          if (err) {
-              return err;
-          }
-          bcrypt.hash(req.body.password, salt, async (err, hash)=> {
-              if (err) {
-                  return err;
-              }
-              await User.updateOne({
-                _id: req.body.id,
-              }, {
-                $set: {
-                  password: hash
-                }
-              });
-          });
-      });
-      }
 
-      return res.status(200).json({code: 200, msg: 'Update successfully'});
-    } catch (error) {
-      return res.status(403).json({code: 403, msg: `Error: ${error}`});
+    if(username) {
+      await User.updateOne({
+        _id: req.body.id,
+      }, {
+        $set: {
+          username: username
+        }
+      });
     }
+
+    if(email) {
+      await User.updateOne({
+        _id: req.body.id,
+      }, {
+        $set: {
+          email: email
+        }
+      });
+    }
+
+    if(password) {
+      bcrypt.genSalt(10, (err, salt)=> {
+        bcrypt.hash(req.body.password, salt, async (err, hash)=> {
+            if (err) {
+                return err;
+            }
+            await User.updateOne({
+              _id: req.body.id,
+            }, {
+              $set: {
+                password: hash
+              }
+            });
+        });
+    });
+    }
+
+    return res.status(200).json({code: 200, msg: 'Update successfully'});
+
+
   }
   return res.status(403).json({code: 403, msg: "Invalid token"});
 }

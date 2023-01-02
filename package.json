@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "test": "cross-env NODE_ENV=test SEED_DB=false mocha"
+    "test": "nyc cross-env NODE_ENV=test SEED_DB=false mocha"
   },
   "dependencies": {
     "@babel/cli": "^7.2.3",
@@ -30,6 +30,7 @@
     "supertest": "^4.0.2"
   },
   "devDependencies": {
-    "chai": "^4.3.7"
+    "chai": "^4.3.7",
+    "nyc": "^15.1.0"
   }
 }

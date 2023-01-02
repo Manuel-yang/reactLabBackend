@@ -59,7 +59,6 @@ router.post("/resetFavGenres", async function(req, res) {
   }
 }) 
 
-
 router.post('/', async function(req, res, next) {
   return await userMethod.register(req, res)
 });

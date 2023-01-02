@@ -679,6 +679,66 @@ describe("Users endpoint", () => {
         });
     });
 
+    it("should return error when username is missing", (done) => {
+      request(api)
+        .post("/users")
+        .send({ password: "test2"})
+        .expect("Content-Type", /json/)
+        .expect(401)
+        .end((err, res) => {
+          expect({success: false, msg: 'Please pass username and password.'})
+          done();
+        });
+    });
+
+    it("should return error when password is missing", (done) => {
+      request(api)
+        .post("/users")
+        .send({ username: "test2"})
+        .expect("Content-Type", /json/)
+        .expect(401)
+        .end((err, res) => {
+          expect({success: false, msg: 'Please pass username and password.'})
+          done();
+        });
+    });
+  
+    it("should return error when password is invalid", (done) => {
+      request(api)
+        .post("/users?action=register")
+        .send({ username: "test6", email: "test6@gmail.com", password: "asd"})
+        .expect("Content-Type", /json/)
+        .expect(401)
+        .end((err, res) => {
+          expect({code: 401,msg: 'Password are at least 5 characters long and contain at least one number and one letter'})
+          done();
+        });
+    });
+
+    // it("should return 201 when register successfully", (done) => {
+    //   request(api)
+    //     .post("/users?action=register")
+    //     .send({ username: "test7",email: "test7@gmail.com", password: "yangyimeng1"})
+    //     .expect("Content-Type", /json/)
+    //     .expect(201)
+    //     .end((err, res) => {
+    //       expect({code: 201, msg: 'Successful created new user.'})
+    //       done();
+    //     });
+    // });
+
+    it("should return 401 when input wrong password", (done) => {
+      request(api)
+        .post("/users")
+        .send({ username: "user2", password: "yangyimeng6"})
+        .expect("Content-Type", /json/)
+        .expect(401)
+        .end((err, res) => {
+          expect({code: 401,msg: 'Authentication failed. Wrong password.'})
+          done();
+        });
+    });
+
     it("should return error when the id missing",  (done) => {
       request(api)
         .post("/users/resetFavGenres")
