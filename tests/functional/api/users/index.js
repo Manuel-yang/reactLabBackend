@@ -211,18 +211,18 @@ describe("Users endpoint", () => {
           .expect(200)
           .end((err, res) => {
             expect(res.body).to.be.a("object")
-            bcrypt.compare("yangyimeng2", res.body.user.password, (err, isMatch) => {
+            bcrypt.compare("yangyimeng2", res.body.user.password, async (err, isMatch) => {
               if(err) {
                 return callback(err)
               }
-              expect(isMatch).is.true
-              request(api)
-              .post("/users/updateInfo")
-              .send({id: id, token: token, password: "test2"})
-              .end(() => {
-                done();
-              })
+              await expect(isMatch).is.true
             });
+            request(api)
+            .post("/users/updateInfo")
+            .send({id: id, token: token, password: "test2"})
+            .end(() => {
+              done();
+            })
           });
 
 
