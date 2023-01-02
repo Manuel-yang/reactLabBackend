@@ -22,12 +22,12 @@ describe("Users endpoint", () => {
       // Register two users
       await request(api).post("/users?action=register").send({
         username: "user1",
-        email: "asdfasd@gmail.com",
+        email: "test1@gmail.com",
         password: "test1",
       });
       await request(api).post("/users?action=register").send({
         username: "user2",
-        email: "asdfaghjfjfghsd@gmail.com",
+        email: "test2@gmail.com",
         password: "test2",
       });
     } catch (err) {
@@ -183,16 +183,16 @@ describe("Users endpoint", () => {
         .send({id: id, token: token})
         .expect("Content-Type", /json/)
         .expect(200)
-        .then((err, res) => {
+        .end((err, res) => {
           expect(res.body).to.be.a("object")
           expect(res.body.user.email).equal("test@gmail.com")
+          request(api)
+          .post("/users/updateInfo")
+          .send({id: id, token: token, email: user.email})
+          .end(() => {
+            done();
+          })
         });
-        request(api)
-        .post("/users/updateInfo")
-        .send({id: id, token: token, email: user.email})
-        .end(() => {
-          done();
-        })
       });
     })
 
@@ -204,29 +204,28 @@ describe("Users endpoint", () => {
       .expect(200)
       .then((err, res) => {
         expect({code: 200, msg: 'Update successfully'})
-        bcrypt.genSalt(10, (err, salt)=> {
-          if (err) {
-              return err;
-          }
-          bcrypt.hash("yangyimeng2", salt, async (err, hash)=> {
-            request(api)
-            .post("/users/userInfo")
-            .send({id: id, token: token})
-            .expect("Content-Type", /json/)
-            .expect(200)
-            .then((err, res) => {
-              expect(res.body).to.be.a("object")
-              expect(res.body.user.password).equal(hash)
+          request(api)
+          .post("/users/userInfo")
+          .send({id: id, token: token})
+          .expect("Content-Type", /json/)
+          .expect(200)
+          .end((err, res) => {
+            expect(res.body).to.be.a("object")
+            bcrypt.compare("yangyimeng2", res.body.user.password, (err, isMatch) => {
+              if(err) {
+                return callback(err)
+              }
+              expect(isMatch).is.true
+              request(api)
+              .post("/users/updateInfo")
+              .send({id: id, token: token, password: "test2"})
+              .end(() => {
+                done();
+              })
             });
           });
-      });
 
-        request(api)
-        .post("/users/updateInfo")
-        .send({id: id, token: token, password: user.password})
-        .end(() => {
-          done();
-        })
+
       });
     })
 
@@ -543,4 +542,177 @@ describe("Users endpoint", () => {
         });
     });
   })
+
+  describe("POST /users/resetFavGenres ", () => {
+    let user;
+    let token
+    let id
+    let id2
+    beforeEach(async () => {
+      try {
+        // Register two users
+        await request(api).get("/users")
+        .then((response) => {
+          user = response.body[0]
+          token = jwt.sign(user.username, process.env.SECRET);
+          id = user._id
+          id2 = response.body[1]._id
+        })
+      } catch (err) {
+        console.error(`failed to Load user test Data: ${err}`);
+      }
+    });
+
+    it("favourite should be empty after reseting", (done) => {
+      request(api)
+      .post("/users/updateGenres")
+      .send({id: id, token: token, newFavGenres: [{id: "1", name: "Action"}]})
+      .expect("Content-Type", /json/)
+      .expect(200)
+      .then(() => {
+        expect({code: 200, msg: 'Update successfully'})
+        request(api)
+        .post("/users/userInfo")
+        .send({id: id, token: token})
+        .expect("Content-Type", /json/)
+        .expect(200)
+        .end((err, res) => {
+          expect(res.body).to.be.a("object")
+          expect(res.body.user.favGenres[0].id).equal(1)
+          expect(res.body.user.favGenres[0].name).equal("Action")
+          request(api)
+          .post("/users/resetFavGenres")
+          .send({id: id, token: token})
+          .then(() => {
+            request(api)
+            .post("/users/userInfo")
+            .send({id: id, token: token})
+            .end((err, res) => {
+              expect(res.body.user.favGenres).to.be.empty
+              done()
+            })
+          })
+        });
+      });
+    })
+
+    it("should return error when the id missing",  (done) => {
+      request(api)
+        .post("/users/resetFavGenres")
+        .send({token: token})
+        .expect("Content-Type", /json/)
+        .expect(401)
+        .end(() => {
+          expect({ code: 401, msg: 'Authentication failed. Invalid token' })
+          done()
+        });
+    });
+
+    it("should return error when the token missing",  (done) => {
+      request(api)
+        .post("/users/resetFavGenres")
+        .send({id: id})
+        .expect("Content-Type", /json/)
+        .expect(401)
+        .end(() => {
+          expect({ code: 401, msg: 'Authentication failed. Invalid token' })
+          done()
+        });
+    });
+
+    it("should return error when the id and token is not combination",  (done) => {
+      request(api)
+        .post("/users/resetFavGenres")
+        .send({id: id2, token: token})
+        .expect("Content-Type", /json/)
+        .expect(403)
+        .end(() => {
+          expect({code: 403, msg: "Invalid token"})
+          done()
+        });
+    });
+  })
+
+  describe("POST /users ", () => {
+    let user;
+    let token
+    let id
+    let id2
+    beforeEach(async () => {
+      try {
+        // Register two users
+        await request(api).get("/users")
+        .then((response) => {
+          user = response.body[0]
+          token = jwt.sign(user.username, process.env.SECRET);
+          id = user._id
+          id2 = response.body[1]._id
+        })
+      } catch (err) {
+        console.error(`failed to Load user test Data: ${err}`);
+      }
+    });
+
+    it("should return user id and user token", (done) => {
+      request(api)
+        .post("/users")
+        .send({username: user.username, password: "test2"})
+        .expect("Content-Type", /json/)
+        .expect(200)
+        .end((err, res) => {
+          expect(res.body).to.be.a("object");
+          expect(res.body.token).equal(token)
+          expect(res.body.userId).equal(id)
+          done();
+        });
+    });
+
+    it("should return error when user doesn't exist", (done) => {
+      request(api)
+        .post("/users")
+        .send({username: "test", password: "test2"})
+        .expect("Content-Type", /json/)
+        .expect(401)
+        .end((err, res) => {
+          expect({ code: 401, msg: 'Authentication failed. User not found.' })
+          done();
+        });
+    });
+
+    it("should return error when the id missing",  (done) => {
+      request(api)
+        .post("/users/resetFavGenres")
+        .send({token: token})
+        .expect("Content-Type", /json/)
+        .expect(401)
+        .end(() => {
+          expect({ code: 401, msg: 'Authentication failed. Invalid token' })
+          done()
+        });
+    });
+
+    it("should return error when the token missing",  (done) => {
+      request(api)
+        .post("/users/resetFavGenres")
+        .send({id: id})
+        .expect("Content-Type", /json/)
+        .expect(401)
+        .end(() => {
+          expect({ code: 401, msg: 'Authentication failed. Invalid token' })
+          done()
+        });
+    });
+
+    it("should return error when the id and token is not combination",  (done) => {
+      request(api)
+        .post("/users/resetFavGenres")
+        .send({id: id2, token: token})
+        .expect("Content-Type", /json/)
+        .expect(403)
+        .end(() => {
+          expect({code: 403, msg: "Invalid token"})
+          done()
+        });
+    });
+  });
 })

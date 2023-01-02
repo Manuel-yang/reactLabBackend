@@ -64,9 +64,9 @@ router.post('/', async function(req, res, next) {
   return await userMethod.register(req, res)
 });
 
-router.post('/:id', function(req, res, next) {
-  return userMethod.updateUserInfo(req, res)
-});
+// router.post('/:id', function(req, res, next) {
+//   return userMethod.updateUserInfo(req, res)
+// });
 
 router.get('/', function(req, res, next) {
   return userMethod.findUser(req, res)
