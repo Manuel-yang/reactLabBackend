@@ -2,7 +2,7 @@ import chai from "chai";
 import request from "supertest";
 const mongoose = require("mongoose");
 const jwt = require('jsonwebtoken')
-import User from "../../../../api/users/userModel";
+const bcrypt = require('bcrypt');
 import api from "../../../../app";
 
 const expect = chai.expect;
@@ -35,6 +35,7 @@ describe("Users endpoint", () => {
     }
   });
 
+  
   describe("GET /users ", () => {
     it("should return the 2 users and a status 200", (done) => {
       request(api)
@@ -56,6 +57,7 @@ describe("Users endpoint", () => {
     let user;
     let token
     let id
+    let id2
     beforeEach(async () => {
       try {
         // Register two users
@@ -64,6 +66,7 @@ describe("Users endpoint", () => {
           user = response.body[0]
           token = jwt.sign(user.username, process.env.SECRET);
           id = user._id
+          id2 = response.body[1]._id
         })
       } catch (err) {
         console.error(`failed to Load user test Data: ${err}`);
@@ -83,40 +86,210 @@ describe("Users endpoint", () => {
         });
     });
 
-    it("should return error when the id miss",  (done) => {
+    it("should return error when the id missing",  (done) => {
       request(api)
         .post("/users/userInfo")
         .send({token: token})
         .expect("Content-Type", /json/)
-        .expect(200)
-        .end((err, res) => {
+        .expect(401)
+        .end(() => {
           expect({ code: 401, msg: 'Authentication failed. Invalid token' })
           done()
         });
     });
 
-    it("should return error when the token miss",  (done) => {
+    it("should return error when the token missing",  (done) => {
       request(api)
         .post("/users/userInfo")
         .send({id: id})
         .expect("Content-Type", /json/)
-        .expect(200)
-        .end((err, res) => {
+        .expect(401)
+        .end(() => {
           expect({ code: 401, msg: 'Authentication failed. Invalid token' })
           done()
         });
     });
 
-    it("should return error when the id and token is not combine",  (done) => {
+    it("should return error when the id and token is not combination",  (done) => {
       request(api)
         .post("/users/userInfo")
-        .send({id: "63b1ee9e9bf6aef1789f7328", token: token})
+        .send({id: id2, token: token})
         .expect("Content-Type", /json/)
-        .expect(200)
-        .end((err, res) => {
+        .expect(401)
+        .end(() => {
           expect({code: 401,msg: 'Invalid token or user id'})
           done()
         });
     });
   });
+
+  describe("POST /users/updateInfo ", () => {
+    let user;
+    let token
+    let id
+    let id2
+    beforeEach(async () => {
+      try {
+        // Register two users
+        await request(api).get("/users")
+        .then((response) => {
+          user = response.body[0]
+          token = jwt.sign(user.username, process.env.SECRET);
+          id = user._id
+          id2 = response.body[1]._id
+        })
+      } catch (err) {
+        console.error(`failed to Load user test Data: ${err}`);
+      }
+    });
+
+    it("username should be changed after updating", (done) => {
+      request(api)
+      .post("/users/updateInfo")
+      .send({id: id, token: token, username: "user3"})
+      .expect("Content-Type", /json/)
+      .expect(200)
+      .then((err, res) => {
+        expect({code: 200, msg: 'Update successfully'})
+        token = jwt.sign("user3", process.env.SECRET);
+        request(api)
+        .post("/users/userInfo")
+        .send({id: id, token: token})
+        .expect("Content-Type", /json/)
+        .expect(200)
+        .then((err, res) => {
+          expect(res.body).to.be.a("object")
+          expect(res.body.user.username).equal("user3")
+
+        });
+        request(api)
+        .post("/users/updateInfo")
+        .send({id: id, token: token, username: user.username})
+        .end(() => {
+          done();
+        })
+
+      });
+    })
+
+    it("email should be changed after updating", (done) => {
+      request(api)
+      .post("/users/updateInfo")
+      .send({id: id, token: token, email: "test@gmail.com"})
+      .expect("Content-Type", /json/)
+      .expect(200)
+      .then((err, res) => {
+        expect({code: 200, msg: 'Update successfully'})
+        request(api)
+        .post("/users/userInfo")
+        .send({id: id, token: token})
+        .expect("Content-Type", /json/)
+        .expect(200)
+        .then((err, res) => {
+          expect(res.body).to.be.a("object")
+          expect(res.body.user.email).equal("test@gmail.com")
+        });
+        request(api)
+        .post("/users/updateInfo")
+        .send({id: id, token: token, email: user.email})
+        .end(() => {
+          done();
+        })
+      });
+    })
+
+    it("password should be changed after updating", (done) => {
+      request(api)
+      .post("/users/updateInfo")
+      .send({id: id, token: token, password: "yangyimeng2"})
+      .expect("Content-Type", /json/)
+      .expect(200)
+      .then((err, res) => {
+        expect({code: 200, msg: 'Update successfully'})
+        bcrypt.genSalt(10, (err, salt)=> {
+          if (err) {
+              return err;
+          }
+          bcrypt.hash("yangyimeng2", salt, async (err, hash)=> {
+            request(api)
+            .post("/users/userInfo")
+            .send({id: id, token: token})
+            .expect("Content-Type", /json/)
+            .expect(200)
+            .then((err, res) => {
+              expect(res.body).to.be.a("object")
+              expect(res.body.user.password).equal(hash)
+            });
+          });
+      });
+
+        request(api)
+        .post("/users/updateInfo")
+        .send({id: id, token: token, password: user.password})
+        .end(() => {
+          done();
+        })
+      });
+    })
+
+    it("should return error when the email address is invalid", (done) => {
+      request(api)
+      .post("/users/updateInfo")
+      .send({id: id, token: token, email: "test@"})
+      .expect("Content-Type", /json/)
+      .expect(403)
+      .end(() => {
+        expect({code: 403, msg: "Invalid email address"})
+        done()
+      })
+    })
+
+    it("should return error when the password is invalid", (done) => {
+      request(api)
+      .post("/users/updateInfo")
+      .send({id: id, token: token, password: "tes"})
+      .expect("Content-Type", /json/)
+      .expect(403)
+      .end(() => {
+        expect({code: 403, msg: 'Password are at least 5 characters long and contain at least one number and one letter'})
+        done()
+      })
+    })
+
+    it("should return error when the id missing",  (done) => {
+      request(api)
+        .post("/users/updateInfo")
+        .send({token: token})
+        .expect("Content-Type", /json/)
+        .expect(401)
+        .end(() => {
+          expect({ code: 401, msg: 'Authentication failed. Invalid token' })
+          done()
+        });
+    });
+
+    it("should return error when the token missing",  (done) => {
+      request(api)
+        .post("/users/updateInfo")
+        .send({id: id})
+        .expect("Content-Type", /json/)
+        .expect(401)
+        .end(() => {
+          expect({ code: 401, msg: 'Authentication failed. Invalid token' })
+          done()
+        });
+    });
+
+    it("should return error when the id and token is not combination",  (done) => {
+      request(api)
+        .post("/users/updateInfo")
+        .send({id: id2, token: token})
+        .expect("Content-Type", /json/)
+        .expect(401)
+        .end(() => {
+          expect({code: 401,msg: 'Invalid token or user id'})
+          done()
+        });
+    });
+  })
 })
