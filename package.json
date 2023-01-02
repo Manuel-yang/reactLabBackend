@@ -4,8 +4,23 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "test": "nyc cross-env NODE_ENV=test SEED_DB=false mocha", 
-    "coverage": "nyc report --reporter=text-lcov | coveralls"
+    "test": "nyc cross-env NODE_ENV=test SEED_DB=false mocha",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "build": "npm-run-all clean compile:all",
+    "clean": "rimraf ./build && mkdir build",
+    "compile:usermodels": "babel ./api/users/ --out-dir build/api/users",
+    "compile:genremodels": "babel ./api/genres/ --out-dir build/api/genres",
+    "compile:routes": "babel ./routes/ --out-dir build/routes",
+    "compile:models": "npm-run-all compile:usermodels compile:genremodels",
+    "compile:authenticate": "babel ./api/auth/ --out-dir build/api/auth",
+    "compile:app": "babel app.js --out-dir build/",
+    "compile:db": "babel ./db --out-dir build/db",
+    "copy:nodeModules": "ncp ./node_modules/ build/node_modules",
+    "copy:public": "ncp ./public build/public",
+    "copy:all": "npm-run-all copy:nodeModules copy:public",
+    "compile:all": "npm-run-all compile:routes compile:models compile:authenticate compile:app compile:db copy:all",
+    "start:prod": "node build/app.js",
+    "postinstall": "rimraf ./build && npm run compile:all"
   },
   "dependencies": {
     "@babel/cli": "^7.2.3",
@@ -28,6 +43,8 @@
     "mocha": "^10.2.0",
     "mongoose": "^6.8.1",
     "morgan": "~1.9.1",
+    "ncp": "^2.0.0",
+    "npm-run-all": "^4.1.5",
     "supertest": "^4.0.2"
   },
   "devDependencies": {
