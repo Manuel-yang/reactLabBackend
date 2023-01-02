@@ -42,5 +42,10 @@ app.use('/genres', genresRouter);
 //   res.status(err.status || 500);
 //   res.render('error');
 // });
+const port = process.env.PORT;
+let server = app.listen(port, () => {
+  console.info(`Server running at ${port}`);
+});
+
 
 module.exports = app;

@@ -16,7 +16,7 @@ exports.findUserById = async (req, res) => {
   const id = req.body.id
   const token = req.body.token
   const user = await User.findByUserId(id);
-  if (auth.jwtVerify(token) == user.username) {
+  if (user && auth.jwtVerify(token) == user.username) {
     return res.status(200).json({code: 200, user: user});
   }
   return res.status(401).json({code: 401,msg: 'Invalid token or user id'});
