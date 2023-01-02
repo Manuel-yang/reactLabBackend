@@ -292,4 +292,89 @@ describe("Users endpoint", () => {
         });
     });
   })
+
+  describe("POST /users/updateGenres ", () => {
+    let user;
+    let token
+    let id
+    let id2
+    beforeEach(async () => {
+      try {
+        // Register two users
+        await request(api).get("/users")
+        .then((response) => {
+          user = response.body[0]
+          token = jwt.sign(user.username, process.env.SECRET);
+          id = user._id
+          id2 = response.body[1]._id
+        })
+      } catch (err) {
+        console.error(`failed to Load user test Data: ${err}`);
+      }
+    });
+
+
+    it("should udpate user favourite genres after updaing", (done) => {
+      request(api)
+      .post("/users/updateGenres")
+      .send({id: id, token: token, newFavGenres: [{id: "1", name: "Action"}]})
+      .expect("Content-Type", /json/)
+      .expect(200)
+      .then(() => {
+        expect({code: 200, msg: 'Update successfully'})
+        request(api)
+        .post("/users/userInfo")
+        .send({id: id, token: token})
+        .expect("Content-Type", /json/)
+        .expect(200)
+        .then((err, res) => {
+          expect(res.body).to.be.a("object")
+          expect(res.body.user.favGenres[0].id).equal(1)
+          expect(res.body.user.favGenres[0].name).equal("Action")
+        });
+        request(api)
+        .post("/users/userInfo")
+        .send({id: id, token: token, newFavGenres: []})
+        .end(() => {
+          done();
+        })
+      });
+    })
+
+    it("should return error when the id missing",  (done) => {
+      request(api)
+        .post("/users/updateGenres")
+        .send({token: token})
+        .expect("Content-Type", /json/)
+        .expect(401)
+        .end(() => {
+          expect({ code: 401, msg: 'Authentication failed. Invalid token' })
+          done()
+        });
+    });
+
+    it("should return error when the token missing",  (done) => {
+      request(api)
+        .post("/users/updateGenres")
+        .send({id: id})
+        .expect("Content-Type", /json/)
+        .expect(401)
+        .end(() => {
+          expect({ code: 401, msg: 'Authentication failed. Invalid token' })
+          done()
+        });
+    });
+
+    it("should return error when the id and token is not combination",  (done) => {
+      request(api)
+        .post("/users/updateGenres")
+        .send({id: id2, token: token})
+        .expect("Content-Type", /json/)
+        .expect(403)
+        .end(() => {
+          expect({code: 403, msg: "Invalid token"})
+          done()
+        });
+    });
+  })
 })
