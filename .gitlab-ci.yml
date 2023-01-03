@@ -68,7 +68,7 @@ deploy_staging:
     - echo "Deployed to staging server"
 
 
-  ContinuousDelivery:
+ContinuousDelivery:
   image: ruby:latest
   stage: ContinuousDelivery
   only:
@@ -81,7 +81,7 @@ deploy_staging:
     - dpl --provider=heroku --app=$HEROKU_APP_NAME_STAGING_TEST --api-key=$HEROKU_API_KEY
     - echo "Deployed to testing server"
   when: manual
-  ContinuousDeployment:
+ContinuousDeployment:
   image: ruby:latest
   stage: ContinuousDeployment
   only:
