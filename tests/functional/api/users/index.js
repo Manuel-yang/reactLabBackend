@@ -34,7 +34,6 @@ describe("Users endpoint", () => {
       console.error(`failed to Load user test Data: ${err}`);
     }
   });
-
   
   describe("GET /users ", () => {
     it("should return the 2 users and a status 200", (done) => {

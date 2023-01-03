@@ -6,6 +6,8 @@ stages:
   - build
   - test
   - staging
+  - ContinuousDelivery
+  - ContinuousDeployment
 
 variables:
    npm_config_cache: "$CI_PROJECT_DIR/.npm"
@@ -56,8 +58,6 @@ test4component:
 
 deploy_staging:
   image: ruby:latest
-  only:
-    - develop
   stage: staging
   before_script:
     - apt-get update -qy
@@ -66,3 +66,32 @@ deploy_staging:
   script:  
     - dpl --provider=heroku --app=$HEROKU_APP_NAME_STAGING --api-key=$HEROKU_API_KEY
     - echo "Deployed to staging server"
+
+
+  ContinuousDelivery:
+  image: ruby:latest
+  stage: ContinuousDelivery
+  only:
+    - develop
+  rules:
+    when: manual
+  before_script:
+    - apt-get update -qy
+    - apt-get install -y ruby-dev
+    - gem install dpl
+  script:  
+    - dpl --provider=heroku --app=$HEROKU_APP_NAME_STAGING_TEST --api-key=$HEROKU_API_KEY
+    - echo "Deployed to testing server"
+
+  ContinuousDeployment:
+  image: ruby:latest
+  stage: ContinuousDeployment
+  only:
+    - main
+  before_script:
+    - apt-get update -qy
+    - apt-get install -y ruby-dev
+    - gem install dpl
+  script:  
+    - dpl --provider=heroku --app=$HEROKU_APP_NAME_STAGING_TEST --api-key=$HEROKU_API_KEY
+    - echo "Deployed to testing server"
