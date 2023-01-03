@@ -73,7 +73,6 @@ deploy_staging:
   stage: ContinuousDelivery
   only:
     - develop
-  when: manual
   before_script:
     - apt-get update -qy
     - apt-get install -y ruby-dev
@@ -81,7 +80,7 @@ deploy_staging:
   script:  
     - dpl --provider=heroku --app=$HEROKU_APP_NAME_STAGING_TEST --api-key=$HEROKU_API_KEY
     - echo "Deployed to testing server"
-
+  when: manual
   ContinuousDeployment:
   image: ruby:latest
   stage: ContinuousDeployment
