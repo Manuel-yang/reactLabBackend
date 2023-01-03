@@ -73,8 +73,7 @@ deploy_staging:
   stage: ContinuousDelivery
   only:
     - develop
-  rules:
-    when: manual
+  when: manual
   before_script:
     - apt-get update -qy
     - apt-get install -y ruby-dev
